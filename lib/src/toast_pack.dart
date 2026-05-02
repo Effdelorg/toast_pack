@@ -8,8 +8,8 @@ import 'toast_variant.dart';
 import 'toast_widget.dart';
 
 /// Public entry point for showing toasts.
-class SnapToast {
-  SnapToast._();
+class ToastPack {
+  ToastPack._();
 
   /// Optional global configuration. Call once (e.g. in `main()`).
   ///
@@ -22,8 +22,8 @@ class SnapToast {
     String? defaultIconAsset,
     ReplacementMode replacementMode = ReplacementMode.instantReplace,
   }) {
-    SnapToastConfig.defaultIconAsset = defaultIconAsset;
-    SnapToastConfig.replacementMode = replacementMode;
+    ToastPackConfig.defaultIconAsset = defaultIconAsset;
+    ToastPackConfig.replacementMode = replacementMode;
   }
 
   static void success(

@@ -79,7 +79,7 @@ class ToastWidgetState extends State<ToastWidget>
     _controller.forward();
     _dismissTimer = Timer(widget.cfg.duration, dismiss);
     if (widget.cfg.leading is ToastLeadingAppIcon &&
-        SnapToastConfig.defaultIconAsset == null) {
+        ToastPackConfig.defaultIconAsset == null) {
       _appIconFuture = AppIconProvider.load();
     }
   }
@@ -262,7 +262,7 @@ class ToastWidgetState extends State<ToastWidget>
       case ToastLeadingIcon(:final icon, :final color, :final size):
         return Icon(icon, color: color ?? textColor, size: size ?? 24);
       case ToastLeadingAppIcon():
-        final asset = SnapToastConfig.defaultIconAsset;
+        final asset = ToastPackConfig.defaultIconAsset;
         if (asset != null) {
           return _assetWithFallback(asset, variant, textColor);
         }

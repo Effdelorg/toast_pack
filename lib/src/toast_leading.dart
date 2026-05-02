@@ -22,7 +22,7 @@ sealed class ToastLeading {
 
   /// Render the native launcher/app icon by default.
   ///
-  /// If `SnapToast.init(defaultIconAsset: ...)` is set, that asset is used as
+  /// If `ToastPack.init(defaultIconAsset: ...)` is set, that asset is used as
   /// an override. Falls back to the variant icon when no app icon can be
   /// resolved.
   const factory ToastLeading.appIcon() = ToastLeadingAppIcon;

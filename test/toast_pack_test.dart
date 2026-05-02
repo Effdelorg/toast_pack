@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:snap_toast_flutter/snap_toast_flutter.dart';
-import 'package:snap_toast_flutter/src/toast_config.dart';
-import 'package:snap_toast_flutter/src/web_background.dart';
+import 'package:toast_pack/toast_pack.dart';
+import 'package:toast_pack/src/toast_config.dart';
+import 'package:toast_pack/src/web_background.dart';
 
 /// Builds a minimal MaterialApp that exposes a BuildContext with an Overlay.
 Widget _hostApp(void Function(BuildContext) onReady) {
@@ -20,12 +20,12 @@ Widget _hostApp(void Function(BuildContext) onReady) {
 }
 
 void main() {
-  setUp(SnapToastConfig.reset);
+  setUp(ToastPackConfig.reset);
 
   group('Default leading behaviour', () {
     testWidgets('no leading visual by default', (tester) async {
       await tester.pumpWidget(_hostApp((ctx) {
-        SnapToast.success(ctx, 'Saved');
+        ToastPack.success(ctx, 'Saved');
       }));
       await tester.pump(); // post-frame fires
       await tester.pump(const Duration(milliseconds: 300)); // forward anim
@@ -33,7 +33,7 @@ void main() {
       expect(find.text('Saved'), findsOneWidget);
       expect(find.byType(Icon), findsNothing);
       expect(find.byType(Image), findsNothing);
-      SnapToast.dismiss();
+      ToastPack.dismiss();
       await tester.pumpAndSettle();
     });
   });
@@ -41,7 +41,7 @@ void main() {
   group('Explicit leading', () {
     testWidgets('ToastLeading.icon renders the provided icon', (tester) async {
       await tester.pumpWidget(_hostApp((ctx) {
-        SnapToast.info(
+        ToastPack.info(
           ctx,
           'Hello',
           leading: const ToastLeading.icon(Icons.star),
@@ -52,14 +52,14 @@ void main() {
 
       expect(find.text('Hello'), findsOneWidget);
       expect(find.byIcon(Icons.star), findsOneWidget);
-      SnapToast.dismiss();
+      ToastPack.dismiss();
       await tester.pumpAndSettle();
     });
 
     testWidgets('ToastLeading.appIcon without init falls back to variant icon',
         (tester) async {
       await tester.pumpWidget(_hostApp((ctx) {
-        SnapToast.error(
+        ToastPack.error(
           ctx,
           'Oops',
           leading: const ToastLeading.appIcon(),
@@ -70,13 +70,13 @@ void main() {
 
       expect(find.text('Oops'), findsOneWidget);
       expect(find.byIcon(Icons.error), findsOneWidget);
-      SnapToast.dismiss();
+      ToastPack.dismiss();
       await tester.pumpAndSettle();
     });
 
     testWidgets('ToastLeading.appIcon uses native icon when available',
         (tester) async {
-      const channel = MethodChannel('snap_toast_flutter/app_icon');
+      const channel = MethodChannel('toast_pack/app_icon');
       final messenger =
           TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
       messenger.setMockMethodCallHandler(channel, (call) async {
@@ -90,7 +90,7 @@ void main() {
       addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
 
       await tester.pumpWidget(_hostApp((ctx) {
-        SnapToast.info(
+        ToastPack.info(
           ctx,
           'Native icon',
           leading: const ToastLeading.appIcon(),
@@ -103,7 +103,7 @@ void main() {
       expect(find.text('Native icon'), findsOneWidget);
       expect(find.byType(Image), findsOneWidget);
       expect(find.byIcon(Icons.info), findsNothing);
-      SnapToast.dismiss();
+      ToastPack.dismiss();
       await tester.pumpAndSettle();
     });
   });
@@ -111,7 +111,7 @@ void main() {
   group('Lifecycle', () {
     testWidgets('auto-dismisses after duration', (tester) async {
       await tester.pumpWidget(_hostApp((ctx) {
-        SnapToast.success(
+        ToastPack.success(
           ctx,
           'bye',
           duration: const Duration(milliseconds: 400),
@@ -129,27 +129,27 @@ void main() {
     testWidgets('instant replacement shows only the latest message',
         (tester) async {
       await tester.pumpWidget(_hostApp((ctx) {
-        SnapToast.success(ctx, 'first');
-        SnapToast.success(ctx, 'second');
+        ToastPack.success(ctx, 'first');
+        ToastPack.success(ctx, 'second');
       }));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
       expect(find.text('first'), findsNothing);
       expect(find.text('second'), findsOneWidget);
-      SnapToast.dismiss();
+      ToastPack.dismiss();
       await tester.pumpAndSettle();
     });
 
-    testWidgets('SnapToast.dismiss() removes the active toast', (tester) async {
+    testWidgets('ToastPack.dismiss() removes the active toast', (tester) async {
       await tester.pumpWidget(_hostApp((ctx) {
-        SnapToast.info(ctx, 'transient');
+        ToastPack.info(ctx, 'transient');
       }));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
       expect(find.text('transient'), findsOneWidget);
 
-      SnapToast.dismiss();
+      ToastPack.dismiss();
       await tester.pumpAndSettle();
       expect(find.text('transient'), findsNothing);
     });
@@ -165,7 +165,7 @@ void main() {
         ),
       );
       expect(
-        () => SnapToast.success(key.currentContext!, 'ignored'),
+        () => ToastPack.success(key.currentContext!, 'ignored'),
         returnsNormally,
       );
     });

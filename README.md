@@ -1,147 +1,643 @@
-# snap_toast_flutter
+# toast_pack
 
-A lightweight, zero-dependency Flutter package for displaying toast notifications via `Overlay`.
+A simple Flutter toast package built with `Overlay`.
 
-- Variant-first API: `SnapToast.success`, `.error`, `.warning`, `.info`
-- Works on Android, iOS, Web, macOS, Windows, Linux
-- iOS/macOS Swift Package Manager (SPM) compatible plugin layout
-- Only one toast visible at a time; configurable replacement behavior
-- Slide + fade, fade, or scale entrance animations
-- Optional leading visual: icon, image asset, app icon, or none (default)
-- Web-specific gradient background, close button, and horizontal position
+Use it when you need small success, error, warning, or info messages without adding a heavy dependency.
+
+![toast_pack demo](assets/toast_pack_demo.gif)
+
+## Features
+
+- Success, error, warning, and info toasts
+- Top, center, and bottom placement
+- Slide, fade, and scale animations
+- Optional leading icon, asset image, or app icon
+- One toast visible at a time
+- Configurable replacement behavior
+- Web-only close button, horizontal position, and gradient background
+- Native app icon lookup on Android, iOS, and macOS
 
 ## Install
 
 ```yaml
 dependencies:
-  snap_toast_flutter: ^0.1.1
+  toast_pack: ^0.1.1
 ```
 
-## Usage
+Then import it:
+
+```dart
+import 'package:toast_pack/toast_pack.dart';
+```
+
+## Quick Start
+
+Call `ToastPack.init()` once in `main()`. It is optional, but useful when you want to set package-wide defaults.
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:snap_toast_flutter/snap_toast_flutter.dart';
+import 'package:toast_pack/toast_pack.dart';
 
 void main() {
-  SnapToast.init(
-    // Optional: override asset for ToastLeading.appIcon().
-    // If omitted, the package will try the native launcher icon.
-    defaultIconAsset: 'assets/app_icon.png',
-    // Optional: how new toasts replace the current one. Default: instantReplace.
-    replacementMode: ReplacementMode.instantReplace,
-  );
+  ToastPack.init();
   runApp(const MyApp());
 }
 
 class MyScreen extends StatelessWidget {
+  const MyScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: ElevatedButton(
-        onPressed: () => SnapToast.success(context, 'Item added'),
-        child: const Text('Show toast'),
-      ),
+    return ElevatedButton(
+      onPressed: () {
+        ToastPack.success(context, 'Item added to cart');
+      },
+      child: const Text('Add to cart'),
     );
   }
 }
 ```
 
-## Variants
+## Basic Use Cases
+
+### Success toast
+
+Use this after a completed action.
 
 ```dart
-SnapToast.success(context, 'Saved');
-SnapToast.error(context, 'Something went wrong');
-SnapToast.warning(context, 'Double-check this');
-SnapToast.info(context, 'Just FYI');
-SnapToast.dismiss(); // clear the current toast
+ToastPack.success(context, 'Profile saved');
 ```
 
-## Leading visual
+### Error toast
 
-The leading visual defaults to **none**. Set one explicitly:
+Use this when something fails.
 
 ```dart
-// Icon
-SnapToast.info(context, 'Hi', leading: ToastLeading.icon(Icons.star));
-
-// Asset image (falls back to variant icon if the asset fails to load)
-SnapToast.success(context, 'Uploaded', leading: ToastLeading.image('assets/check.png'));
-
-// Uses native app icon by default (or your init override asset, if set)
-SnapToast.info(context, 'New update', leading: ToastLeading.appIcon());
-
-// Explicitly no leading visual (the default)
-SnapToast.warning(context, 'Heads up', leading: ToastLeading.none());
+ToastPack.error(context, 'Payment failed. Please try again');
 ```
 
-## Parameters
+### Warning toast
 
-All variant methods share the same named parameters:
+Use this when the user should double-check something.
 
-| Param | Type | Default |
+```dart
+ToastPack.warning(context, 'Only 2 items left in stock');
+```
+
+### Info toast
+
+Use this for neutral messages.
+
+```dart
+ToastPack.info(context, 'Your order is being prepared');
+```
+
+### Dismiss current toast
+
+Use this when you want to close the active toast yourself.
+
+```dart
+ToastPack.dismiss();
+```
+
+## Position
+
+Use `gravity` to control vertical placement.
+
+```dart
+ToastPack.success(
+  context,
+  'Added to wishlist',
+  gravity: ToastGravity.top,
+);
+
+ToastPack.info(
+  context,
+  'Syncing cart',
+  gravity: ToastGravity.center,
+);
+
+ToastPack.error(
+  context,
+  'Could not load products',
+  gravity: ToastGravity.bottom,
+);
+```
+
+Available values:
+
+```dart
+ToastGravity.top
+ToastGravity.center
+ToastGravity.bottom
+```
+
+## Animations
+
+Use `animation` to choose how the toast appears and disappears.
+
+```dart
+ToastPack.success(
+  context,
+  'Order placed',
+  animation: ToastAnimation.slide,
+);
+
+ToastPack.info(
+  context,
+  'Coupon applied',
+  animation: ToastAnimation.fade,
+);
+
+ToastPack.warning(
+  context,
+  'Cart updated',
+  animation: ToastAnimation.scale,
+);
+```
+
+You can also change the speed and curve.
+
+```dart
+ToastPack.success(
+  context,
+  'Saved',
+  animationDuration: const Duration(milliseconds: 350),
+  curve: Curves.easeOutBack,
+);
+```
+
+## Duration
+
+By default, a toast stays visible for 2 seconds.
+
+```dart
+ToastPack.info(
+  context,
+  'Downloading invoice',
+  duration: const Duration(seconds: 4),
+);
+```
+
+## Colors
+
+Each variant has a default color. You can override it when needed.
+
+```dart
+ToastPack.success(
+  context,
+  'Custom brand toast',
+  backgroundColor: const Color(0xFF111827),
+  textColor: Colors.white,
+);
+```
+
+Default colors:
+
+| Variant | Background | Text | Fallback icon |
+| --- | --- | --- | --- |
+| `success` | `#4CAF50` | white | `Icons.check_circle` |
+| `error` | `#F44336` | white | `Icons.error` |
+| `warning` | `#FFC107` | black | `Icons.warning` |
+| `info` | `#2196F3` | white | `Icons.info` |
+
+## Text Style
+
+Use `fontSize` and `fontFamily` for simple text styling.
+
+```dart
+ToastPack.info(
+  context,
+  'Welcome back',
+  fontSize: 16,
+  fontFamily: 'Inter',
+);
+```
+
+If your app uses responsive font helpers, pass the calculated value with a clear `base`, `min`, and `max`.
+
+```dart
+ToastPack.info(
+  context,
+  'Welcome back',
+  fontSize: context.scaledFont(base: 14, min: 12, max: 18),
+);
+```
+
+Or:
+
+```dart
+ToastPack.info(
+  context,
+  'Welcome back',
+  fontSize: AppTheme.scaledFontSize(base: 14, min: 12, max: 18),
+);
+```
+
+## Leading Visual
+
+By default, no leading visual is shown.
+
+### No leading visual
+
+```dart
+ToastPack.info(
+  context,
+  'Address updated',
+  leading: const ToastLeading.none(),
+);
+```
+
+### Material icon
+
+```dart
+ToastPack.success(
+  context,
+  'Added to favorites',
+  leading: const ToastLeading.icon(Icons.favorite),
+);
+```
+
+You can customize icon color and size.
+
+```dart
+ToastPack.info(
+  context,
+  'New message',
+  leading: const ToastLeading.icon(
+    Icons.chat_bubble,
+    color: Colors.white,
+    size: 22,
+  ),
+);
+```
+
+### Asset image
+
+Use this for custom images, logos, or small illustrations.
+
+```dart
+ToastPack.success(
+  context,
+  'Reward unlocked',
+  leading: const ToastLeading.image('assets/reward.png'),
+);
+```
+
+If the asset cannot load, the toast falls back to the variant icon.
+
+### App icon
+
+Use this when you want the toast to show your app icon.
+
+```dart
+ToastPack.info(
+  context,
+  'Snaptoast is ready',
+  leading: const ToastLeading.appIcon(),
+);
+```
+
+You can also provide your own app icon asset once during startup.
+
+```dart
+void main() {
+  ToastPack.init(
+    defaultIconAsset: 'assets/app_icon.png',
+  );
+
+  runApp(const MyApp());
+}
+```
+
+Then use:
+
+```dart
+ToastPack.info(
+  context,
+  'Using custom app icon',
+  leading: const ToastLeading.appIcon(),
+);
+```
+
+## Margins
+
+Use `margin` to control spacing from the screen edges.
+
+```dart
+ToastPack.success(
+  context,
+  'Placed near the edge',
+  margin: const EdgeInsets.all(24),
+);
+```
+
+## Replacement Behavior
+
+Only one toast is visible at a time.
+
+By default, a new toast immediately replaces the current toast.
+
+```dart
+void main() {
+  ToastPack.init(
+    replacementMode: ReplacementMode.instantReplace,
+  );
+
+  runApp(const MyApp());
+}
+```
+
+If you want a smoother transition, use `gracefulCrossfade`.
+
+```dart
+void main() {
+  ToastPack.init(
+    replacementMode: ReplacementMode.gracefulCrossfade,
+  );
+
+  runApp(const MyApp());
+}
+```
+
+## Web Use Cases
+
+Web has a few extra options.
+
+### Web close button
+
+```dart
+ToastPack.info(
+  context,
+  'Product added',
+  webShowClose: true,
+);
+```
+
+### Web horizontal position
+
+```dart
+ToastPack.success(
+  context,
+  'Saved',
+  webPosition: ToastWebPosition.right,
+);
+```
+
+Available values:
+
+```dart
+ToastWebPosition.left
+ToastWebPosition.center
+ToastWebPosition.right
+```
+
+### Web solid background
+
+```dart
+ToastPack.info(
+  context,
+  'Web toast',
+  webBgColor: '#111827',
+);
+```
+
+### Web gradient background
+
+```dart
+ToastPack.success(
+  context,
+  'Order confirmed',
+  webBgColor: 'linear-gradient(to right, #00b09b, #96c93d)',
+);
+```
+
+Supported `webBgColor` values:
+
+- Hex color: `#RRGGBB`
+- Hex color with alpha: `#RRGGBBAA`
+- Linear gradient: `linear-gradient(to right, #00b09b, #96c93d)`
+
+Supported gradient directions:
+
+```text
+to left
+to right
+to top
+to bottom
+to top left
+to top right
+to bottom left
+to bottom right
+```
+
+Web-only options are ignored on non-web platforms.
+
+## Platform Notes
+
+### Android
+
+`toast_pack` uses Flutter `Overlay`, so normal toasts work inside your Flutter UI.
+
+`ToastLeading.appIcon()` can read the native Android launcher icon.
+
+Image placeholder:
+
+```md
+![Android toast screenshot](screenshots/android-toast.png)
+```
+
+Example:
+
+```dart
+ToastPack.success(
+  context,
+  'Added to cart',
+  leading: const ToastLeading.appIcon(),
+  gravity: ToastGravity.bottom,
+);
+```
+
+### iOS
+
+Normal toasts work inside your Flutter UI.
+
+`ToastLeading.appIcon()` can read the iOS app icon from the app bundle.
+
+Image placeholder:
+
+```md
+![iOS toast screenshot](screenshots/ios-toast.png)
+```
+
+Example:
+
+```dart
+ToastPack.info(
+  context,
+  'Order status updated',
+  leading: const ToastLeading.appIcon(),
+  gravity: ToastGravity.top,
+);
+```
+
+### macOS
+
+Normal toasts work inside your Flutter UI.
+
+`ToastLeading.appIcon()` can read the macOS application icon.
+
+Image placeholder:
+
+```md
+![macOS toast screenshot](screenshots/macos-toast.png)
+```
+
+Example:
+
+```dart
+ToastPack.warning(
+  context,
+  'Connection is slow',
+  leading: const ToastLeading.appIcon(),
+  animation: ToastAnimation.fade,
+);
+```
+
+### Web
+
+Normal toasts work inside your Flutter UI.
+
+Web supports extra styling options like `webShowClose`, `webPosition`, and `webBgColor`.
+
+`ToastLeading.appIcon()` uses `defaultIconAsset` if you set one. Without an asset override, it falls back to the variant icon.
+
+Image placeholder:
+
+```md
+![Web toast screenshot](screenshots/web-toast.png)
+```
+
+Example:
+
+```dart
+ToastPack.success(
+  context,
+  'Checkout complete',
+  webShowClose: true,
+  webPosition: ToastWebPosition.right,
+  webBgColor: 'linear-gradient(to right, #2193b0, #6dd5ed)',
+);
+```
+
+### Windows
+
+Normal toasts work inside your Flutter UI.
+
+`ToastLeading.appIcon()` does not have native Windows icon lookup in this version. Use `defaultIconAsset`, `ToastLeading.image(...)`, or `ToastLeading.icon(...)`.
+
+Image placeholder:
+
+```md
+![Windows toast screenshot](screenshots/windows-toast.png)
+```
+
+Example:
+
+```dart
+ToastPack.info(
+  context,
+  'Desktop toast',
+  leading: const ToastLeading.icon(Icons.desktop_windows),
+);
+```
+
+### Linux
+
+Normal toasts work inside your Flutter UI.
+
+`ToastLeading.appIcon()` does not have native Linux icon lookup in this version. Use `defaultIconAsset`, `ToastLeading.image(...)`, or `ToastLeading.icon(...)`.
+
+Image placeholder:
+
+```md
+![Linux toast screenshot](screenshots/linux-toast.png)
+```
+
+Example:
+
+```dart
+ToastPack.info(
+  context,
+  'Desktop toast',
+  leading: const ToastLeading.icon(Icons.desktop_windows),
+);
+```
+
+## All Parameters
+
+All variant methods support the same parameters.
+
+```dart
+ToastPack.success(
+  context,
+  'Message',
+  duration: const Duration(seconds: 2),
+  gravity: ToastGravity.bottom,
+  backgroundColor: null,
+  textColor: null,
+  fontSize: 14,
+  fontFamily: null,
+  leading: const ToastLeading.none(),
+  margin: const EdgeInsets.all(16),
+  animation: ToastAnimation.slide,
+  animationDuration: const Duration(milliseconds: 250),
+  curve: Curves.easeOut,
+  webShowClose: false,
+  webBgColor: null,
+  webPosition: ToastWebPosition.center,
+);
+```
+
+| Parameter | Type | Default |
 | --- | --- | --- |
 | `duration` | `Duration` | `Duration(seconds: 2)` |
 | `gravity` | `ToastGravity` | `ToastGravity.bottom` |
 | `backgroundColor` | `Color?` | variant default |
 | `textColor` | `Color?` | variant default |
 | `fontSize` | `double` | `14` |
-| `fontFamily` | `String?` | inherits ambient theme |
+| `fontFamily` | `String?` | ambient text font |
 | `leading` | `ToastLeading` | `ToastLeading.none()` |
 | `margin` | `EdgeInsets` | `EdgeInsets.all(16)` |
 | `animation` | `ToastAnimation` | `ToastAnimation.slide` |
-| `animationDuration` | `Duration` | `250 ms` |
+| `animationDuration` | `Duration` | `Duration(milliseconds: 250)` |
 | `curve` | `Curve` | `Curves.easeOut` |
 | `webShowClose` | `bool` | `false` |
-| `webBgColor` | `String?` | defaults to `linear-gradient(to right, #00b09b, #96c93d)` on web |
+| `webBgColor` | `String?` | default web gradient |
 | `webPosition` | `ToastWebPosition` | `ToastWebPosition.center` |
 
-## Variant defaults
-
-| Variant | Background | Text | Fallback icon |
-| --- | --- | --- | --- |
-| success | `#4CAF50` | white | `Icons.check_circle` |
-| error | `#F44336` | white | `Icons.error` |
-| warning | `#FFC107` | black | `Icons.warning` |
-| info | `#2196F3` | white | `Icons.info` |
-
-## Web-specific styling
-
-`webBgColor` accepts either:
-
-- a hex color: `#RRGGBB` or `#RRGGBBAA`
-- a CSS `linear-gradient(...)` string with `to right | left | top | bottom | top left | top right | bottom left | bottom right`
+## Full Example
 
 ```dart
-SnapToast.info(
+ToastPack.success(
   context,
-  'Ready',
-  webBgColor: 'linear-gradient(to right, #2193b0, #6dd5ed)',
+  'Item added to cart',
+  duration: const Duration(seconds: 3),
+  gravity: ToastGravity.bottom,
+  backgroundColor: const Color(0xFF111827),
+  textColor: Colors.white,
+  fontSize: context.scaledFont(base: 14, min: 12, max: 18),
+  leading: const ToastLeading.icon(Icons.shopping_cart),
+  margin: const EdgeInsets.all(20),
+  animation: ToastAnimation.slide,
+  animationDuration: const Duration(milliseconds: 300),
+  curve: Curves.easeOut,
   webShowClose: true,
+  webBgColor: 'linear-gradient(to right, #111827, #2563EB)',
   webPosition: ToastWebPosition.right,
 );
 ```
 
-Web-specific parameters are silently ignored on non-web platforms.
+## Example App
 
-## Animations
-
-```dart
-SnapToast.success(context, 'Hi', animation: ToastAnimation.slide); // slide + fade (default)
-SnapToast.success(context, 'Hi', animation: ToastAnimation.fade);
-SnapToast.success(context, 'Hi', animation: ToastAnimation.scale); // scale + fade
-```
-
-## Replacement behavior
-
-```dart
-// Kill the current toast immediately, then show the new one (default).
-SnapToast.init(replacementMode: ReplacementMode.instantReplace);
-
-// Animate the current toast out while the new one animates in.
-SnapToast.init(replacementMode: ReplacementMode.gracefulCrossfade);
-```
-
-## Example
-
-See [`example/`](example/) for a demo app that exercises every parameter.
+See [`example/`](example/) for a demo app.

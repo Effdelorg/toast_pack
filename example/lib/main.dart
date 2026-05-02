@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:snap_toast_flutter/snap_toast_flutter.dart';
+import 'package:toast_pack/toast_pack.dart';
 
 void main() {
   // Optional: register an override asset that ToastLeading.appIcon() will use.
   // If omitted, the package now tries the native launcher icon automatically.
-  SnapToast.init();
+  ToastPack.init();
   runApp(const DemoApp());
 }
 
@@ -14,8 +14,9 @@ class DemoApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      title: 'snap_toast_flutter demo',
+      title: 'toast_pack demo',
       home: DemoHome(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -30,7 +31,7 @@ class DemoHome extends StatefulWidget {
 class _DemoHomeState extends State<DemoHome> {
   ToastGravity _gravity = ToastGravity.bottom;
   ToastAnimation _animation = ToastAnimation.slide;
-  final ToastLeading _leading = const ToastLeading.appIcon();
+  ToastLeading _leading = const ToastLeading.appIcon();
   bool _webShowClose = false;
   ToastWebPosition _webPos = ToastWebPosition.center;
   String? _webBgColor; // null => default gradient on web
@@ -38,7 +39,7 @@ class _DemoHomeState extends State<DemoHome> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('snap_toast_flutter')),
+      appBar: AppBar(title: const Text('toast_pack')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -50,7 +51,7 @@ class _DemoHomeState extends State<DemoHome> {
               runSpacing: 8,
               children: [
                 FilledButton(
-                  onPressed: () => SnapToast.success(
+                  onPressed: () => ToastPack.success(
                     context,
                     'Item added',
                     gravity: _gravity,
@@ -63,7 +64,7 @@ class _DemoHomeState extends State<DemoHome> {
                   child: const Text('success'),
                 ),
                 FilledButton(
-                  onPressed: () => SnapToast.error(
+                  onPressed: () => ToastPack.error(
                     context,
                     'Something went wrong',
                     gravity: _gravity,
@@ -75,7 +76,7 @@ class _DemoHomeState extends State<DemoHome> {
                   child: const Text('error'),
                 ),
                 FilledButton(
-                  onPressed: () => SnapToast.warning(
+                  onPressed: () => ToastPack.warning(
                     context,
                     'Double-check this',
                     gravity: _gravity,
@@ -87,7 +88,7 @@ class _DemoHomeState extends State<DemoHome> {
                   child: const Text('warning'),
                 ),
                 FilledButton(
-                  onPressed: () => SnapToast.info(
+                  onPressed: () => ToastPack.info(
                     context,
                     'Just FYI',
                     gravity: _gravity,
@@ -99,7 +100,7 @@ class _DemoHomeState extends State<DemoHome> {
                   child: const Text('info'),
                 ),
                 OutlinedButton(
-                  onPressed: () => SnapToast.dismiss(),
+                  onPressed: () => ToastPack.dismiss(),
                   child: const Text('dismiss'),
                 ),
               ],
@@ -108,25 +109,25 @@ class _DemoHomeState extends State<DemoHome> {
             Wrap(
               spacing: 8,
               children: [
-                // ChoiceChip(
-                //   label: const Text('none'),
-                //   selected: _leading is ToastLeadingNone,
-                //   onSelected: (_) =>
-                //       setState(() => _leading = const ToastLeading.none()),
-                // ),
-                // ChoiceChip(
-                //   label: const Text('icon (star)'),
-                //   selected: _leading is ToastLeadingIcon,
-                //   onSelected: (_) => setState(
-                //     () => _leading = const ToastLeading.icon(Icons.star),
-                //   ),
-                // ),
-                // ChoiceChip(
-                //   label: const Text('appIcon (fallback)'),
-                //   selected: _leading is ToastLeadingAppIcon,
-                //   onSelected: (_) =>
-                //       setState(() => _leading = const ToastLeading.appIcon()),
-                // ),
+                ChoiceChip(
+                  label: const Text('none'),
+                  selected: _leading is ToastLeadingNone,
+                  onSelected: (_) =>
+                      setState(() => _leading = const ToastLeading.none()),
+                ),
+                ChoiceChip(
+                  label: const Text('icon (star)'),
+                  selected: _leading is ToastLeadingIcon,
+                  onSelected: (_) => setState(
+                    () => _leading = const ToastLeading.icon(Icons.star),
+                  ),
+                ),
+                ChoiceChip(
+                  label: const Text('appIcon (fallback)'),
+                  selected: _leading is ToastLeadingAppIcon,
+                  onSelected: (_) =>
+                      setState(() => _leading = const ToastLeading.appIcon()),
+                ),
               ],
             ),
             const _SectionHeader('Gravity'),

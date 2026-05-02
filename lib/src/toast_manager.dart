@@ -36,7 +36,7 @@ class ToastManager {
     _currentKey = key;
 
     if (previous != null) {
-      switch (SnapToastConfig.replacementMode) {
+      switch (ToastPackConfig.replacementMode) {
         case ReplacementMode.instantReplace:
           _safeRemove(previous);
           overlay.insert(entry);
