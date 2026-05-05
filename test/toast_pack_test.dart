@@ -19,6 +19,21 @@ Widget _hostApp(void Function(BuildContext) onReady) {
   );
 }
 
+void _mockNativeAppIcon() {
+  const channel = MethodChannel('toast_pack/app_icon');
+  final messenger =
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+  messenger.setMockMethodCallHandler(channel, (call) async {
+    if (call.method != 'getAppIcon') return null;
+    return Uint8List.fromList(
+      base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7Z4mQAAAAASUVORK5CYII=',
+      ),
+    );
+  });
+  addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
+}
+
 void main() {
   setUp(ToastPackConfig.reset);
 
@@ -39,6 +54,36 @@ void main() {
   });
 
   group('Explicit leading', () {
+    test('image and app icon expose percentage sizing defaults', () {
+      final image =
+          ToastLeading.image('assets/reward.png') as ToastLeadingImage;
+      expect(image.heightPercentage, 0.80);
+      expect(image.widthPercentage, 0.20);
+
+      final appIcon = ToastLeading.appIcon() as ToastLeadingAppIcon;
+      expect(appIcon.heightPercentage, 0.80);
+      expect(appIcon.widthPercentage, 0.20);
+    });
+
+    test('image and app icon reject invalid percentages', () {
+      expect(
+        () => ToastLeading.image('assets/reward.png', heightPercentage: 0),
+        throwsAssertionError,
+      );
+      expect(
+        () => ToastLeading.image('assets/reward.png', widthPercentage: 1.1),
+        throwsAssertionError,
+      );
+      expect(
+        () => ToastLeading.appIcon(heightPercentage: 1.1),
+        throwsAssertionError,
+      );
+      expect(
+        () => ToastLeading.appIcon(widthPercentage: 0),
+        throwsAssertionError,
+      );
+    });
+
     testWidgets('ToastLeading.icon renders the provided icon', (tester) async {
       await tester.pumpWidget(_hostApp((ctx) {
         ToastPack.info(
@@ -69,25 +114,15 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       expect(find.text('Oops'), findsOneWidget);
-      expect(find.byIcon(Icons.error), findsOneWidget);
+      final fallback = tester.widget<Icon>(find.byIcon(Icons.error));
+      expect(fallback.size, greaterThan(0));
       ToastPack.dismiss();
       await tester.pumpAndSettle();
     });
 
     testWidgets('ToastLeading.appIcon uses native icon when available',
         (tester) async {
-      const channel = MethodChannel('toast_pack/app_icon');
-      final messenger =
-          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
-      messenger.setMockMethodCallHandler(channel, (call) async {
-        if (call.method != 'getAppIcon') return null;
-        return Uint8List.fromList(
-          base64Decode(
-            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7Z4mQAAAAASUVORK5CYII=',
-          ),
-        );
-      });
-      addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
+      _mockNativeAppIcon();
 
       await tester.pumpWidget(_hostApp((ctx) {
         ToastPack.info(
@@ -101,8 +136,188 @@ void main() {
       await tester.pump();
 
       expect(find.text('Native icon'), findsOneWidget);
-      expect(find.byType(Image), findsOneWidget);
+      final image = tester.widget<Image>(find.byType(Image));
+      expect(image.width, image.height);
+      expect(image.width, greaterThan(0));
       expect(find.byIcon(Icons.info), findsNothing);
+      ToastPack.dismiss();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('ToastLeading.appIcon uses width percentage as a cap',
+        (tester) async {
+      _mockNativeAppIcon();
+
+      await tester.pumpWidget(_hostApp((ctx) {
+        ToastPack.info(
+          ctx,
+          'Native icon',
+          leading: const ToastLeading.appIcon(widthPercentage: 0.02),
+        );
+      }));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump();
+
+      final image = tester.widget<Image>(find.byType(Image));
+      expect(image.width, lessThan(24));
+      ToastPack.dismiss();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('one-line app icon size does not grow with message length',
+        (tester) async {
+      _mockNativeAppIcon();
+      BuildContext? readyContext;
+      await tester.pumpWidget(_hostApp((ctx) => readyContext = ctx));
+      await tester.pump();
+
+      ToastPack.info(
+        readyContext,
+        'FYI',
+        leading: const ToastLeading.appIcon(),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump();
+      final shortSize = tester.widget<Image>(find.byType(Image)).width;
+
+      ToastPack.dismiss();
+      await tester.pumpAndSettle();
+
+      ToastPack.error(
+        readyContext,
+        'Something went wrong',
+        leading: const ToastLeading.appIcon(),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump();
+      final longSize = tester.widget<Image>(find.byType(Image)).width;
+
+      expect(longSize, shortSize);
+      ToastPack.dismiss();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('narrow layouts reduce percentage-based app icon size',
+        (tester) async {
+      _mockNativeAppIcon();
+      tester.view.physicalSize = const Size(160, 400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(_hostApp((ctx) {
+        ToastPack.info(
+          ctx,
+          'Native icon',
+          leading: const ToastLeading.appIcon(),
+        );
+      }));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump();
+
+      final image = tester.widget<Image>(find.byType(Image));
+      expect(image.width, lessThan(30));
+      ToastPack.dismiss();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets(
+        'wrapped text reserves percentage-based app icon width when sizing',
+        (tester) async {
+      _mockNativeAppIcon();
+      tester.view.physicalSize = const Size(220, 400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      const message = 'Limited-time checkout reward expires soon';
+
+      await tester.pumpWidget(_hostApp((ctx) {
+        ToastPack.info(
+          ctx,
+          message,
+          leading: const ToastLeading.appIcon(widthPercentage: 0.80),
+        );
+      }));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump();
+
+      final image = tester.widget<Image>(find.byType(Image));
+      const availableWidth = 220.0 - 32.0;
+      const horizontalPadding = 40.0;
+      const verticalPadding = 28.0;
+      const leadingGap = 12.0;
+      final oldTextPainter = TextPainter(
+        text: const TextSpan(
+          text: message,
+          style: TextStyle(fontSize: 14),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout(
+          maxWidth: availableWidth - horizontalPadding - leadingGap,
+        );
+      final maxLeadingWidth = availableWidth - horizontalPadding - leadingGap;
+      final oldMeasuredSize =
+          ((verticalPadding + oldTextPainter.height) * 0.80).clamp(
+        0.0,
+        maxLeadingWidth * 0.80,
+      );
+
+      expect(image.width, greaterThan(oldMeasuredSize + 3));
+      ToastPack.dismiss();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('percentage-based app icon sizing respects custom padding',
+        (tester) async {
+      _mockNativeAppIcon();
+      tester.view.physicalSize = const Size(220, 400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(_hostApp((ctx) {
+        ToastPack.info(
+          ctx,
+          'Custom padding keeps sizing honest',
+          leading: const ToastLeading.appIcon(widthPercentage: 0.80),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        );
+      }));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump();
+
+      final image = tester.widget<Image>(find.byType(Image));
+      expect(image.width, lessThan(220));
+      expect(tester.takeException(), isNull);
+      ToastPack.dismiss();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('ToastLeading.image fallback uses percentage sizing',
+        (tester) async {
+      await tester.pumpWidget(_hostApp((ctx) {
+        ToastPack.warning(
+          ctx,
+          'Missing image',
+          leading: const ToastLeading.image(
+            'assets/not-found.png',
+            widthPercentage: 0.02,
+          ),
+        );
+      }));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump();
+
+      final fallback = tester.widget<Icon>(find.byIcon(Icons.warning));
+      expect(fallback.size, lessThan(24));
       ToastPack.dismiss();
       await tester.pumpAndSettle();
     });
@@ -168,6 +383,30 @@ void main() {
         () => ToastPack.success(key.currentContext!, 'ignored'),
         returnsNormally,
       );
+    });
+
+    testWidgets('shows with an explicit overlay state', (tester) async {
+      final navigatorKey = GlobalKey<NavigatorState>();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: navigatorKey,
+          home: const Scaffold(body: SizedBox.expand()),
+        ),
+      );
+
+      final overlayState = navigatorKey.currentState!.overlay!;
+      ToastPack.info(
+        null,
+        'Overlay state toast',
+        overlayState: overlayState,
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Overlay state toast'), findsOneWidget);
+      ToastPack.dismiss();
+      await tester.pumpAndSettle();
     });
   });
 

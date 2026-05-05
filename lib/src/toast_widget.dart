@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +22,7 @@ class ResolvedToastConfig {
   final String? fontFamily;
   final ToastLeading leading;
   final EdgeInsets margin;
+  final EdgeInsets padding;
   final ToastAnimation animation;
   final Duration animationDuration;
   final Curve curve;
@@ -39,6 +41,7 @@ class ResolvedToastConfig {
     required this.fontFamily,
     required this.leading,
     required this.margin,
+    required this.padding,
     required this.animation,
     required this.animationDuration,
     required this.curve,
@@ -52,11 +55,7 @@ class ToastWidget extends StatefulWidget {
   final ResolvedToastConfig cfg;
   final VoidCallback onDismissed;
 
-  const ToastWidget({
-    super.key,
-    required this.cfg,
-    required this.onDismissed,
-  });
+  const ToastWidget({super.key, required this.cfg, required this.onDismissed});
 
   @override
   State<ToastWidget> createState() => ToastWidgetState();
@@ -64,6 +63,9 @@ class ToastWidget extends StatefulWidget {
 
 class ToastWidgetState extends State<ToastWidget>
     with SingleTickerProviderStateMixin {
+  static const _leadingGap = 12.0;
+  static const _closeIconSize = 18.0;
+
   late final AnimationController _controller;
   Timer? _dismissTimer;
   bool _dismissed = false;
@@ -164,12 +166,17 @@ class ToastWidgetState extends State<ToastWidget>
   }
 
   Widget _wrapAnimation(Widget child) {
-    final curved = CurvedAnimation(parent: _controller, curve: widget.cfg.curve);
+    final curved = CurvedAnimation(
+      parent: _controller,
+      curve: widget.cfg.curve,
+    );
     switch (widget.cfg.animation) {
       case ToastAnimation.slide:
         return SlideTransition(
-          position: Tween<Offset>(begin: _slideOffset(), end: Offset.zero)
-              .animate(curved),
+          position: Tween<Offset>(
+            begin: _slideOffset(),
+            end: Offset.zero,
+          ).animate(curved),
           child: FadeTransition(opacity: curved, child: child),
         );
       case ToastAnimation.fade:
@@ -198,6 +205,11 @@ class ToastWidgetState extends State<ToastWidget>
     final variant = ToastVariantDefaults.of(cfg.variant);
     final bgColor = cfg.backgroundColor ?? variant.backgroundColor;
     final textColor = cfg.textColor ?? variant.textColor;
+    final textStyle = TextStyle(
+      color: textColor,
+      fontSize: cfg.fontSize,
+      fontFamily: cfg.fontFamily,
+    );
     const radius = 28.0;
 
     final Decoration decoration;
@@ -217,82 +229,197 @@ class ToastWidgetState extends State<ToastWidget>
       );
     }
 
-    final leadingWidget = _buildLeading(variant, textColor);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final leadingWidget = _buildLeading(
+          context,
+          variant,
+          textColor,
+          textStyle,
+          constraints.maxWidth,
+        );
 
-    return Container(
-      decoration: decoration,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (leadingWidget != null) ...[
-            leadingWidget,
-            const SizedBox(width: 12),
-          ],
-          Flexible(
-            child: Text(
-              cfg.message,
-              style: TextStyle(
-                color: textColor,
-                fontSize: cfg.fontSize,
-                fontFamily: cfg.fontFamily,
-              ),
-            ),
+        return Container(
+          decoration: decoration,
+          padding: cfg.padding,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (leadingWidget != null) ...[
+                leadingWidget,
+                const SizedBox(width: _leadingGap),
+              ],
+              Flexible(child: Text(cfg.message, style: textStyle)),
+              if (kIsWeb && cfg.webShowClose) ...[
+                const SizedBox(width: _leadingGap),
+                GestureDetector(
+                  onTap: dismiss,
+                  behavior: HitTestBehavior.opaque,
+                  child: Icon(
+                    Icons.close,
+                    size: _closeIconSize,
+                    color: textColor,
+                  ),
+                ),
+              ],
+            ],
           ),
-          if (kIsWeb && cfg.webShowClose) ...[
-            const SizedBox(width: 12),
-            GestureDetector(
-              onTap: dismiss,
-              behavior: HitTestBehavior.opaque,
-              child: Icon(Icons.close, size: 18, color: textColor),
-            ),
-          ],
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget? _buildLeading(ToastVariantDefaults variant, Color textColor) {
+  Widget? _buildLeading(
+    BuildContext context,
+    ToastVariantDefaults variant,
+    Color textColor,
+    TextStyle textStyle,
+    double maxToastWidth,
+  ) {
     final leading = widget.cfg.leading;
     switch (leading) {
       case ToastLeadingNone():
         return null;
-      case ToastLeadingImage(:final assetPath):
-        return _assetWithFallback(assetPath, variant, textColor);
+      case ToastLeadingImage(
+        :final assetPath,
+        :final color,
+        :final heightPercentage,
+        :final widthPercentage,
+      ):
+        final resolvedSize = _resolvePercentageLeadingSize(
+          context: context,
+          textStyle: textStyle,
+          maxToastWidth: maxToastWidth,
+          heightPercentage: heightPercentage,
+          widthPercentage: widthPercentage,
+        );
+        return _assetWithFallback(
+          assetPath,
+          variant,
+          textColor,
+          resolvedSize,
+          color: color,
+        );
       case ToastLeadingIcon(:final icon, :final color, :final size):
         return Icon(icon, color: color ?? textColor, size: size ?? 24);
-      case ToastLeadingAppIcon():
+      case ToastLeadingAppIcon(:final heightPercentage, :final widthPercentage):
+        final resolvedSize = _resolvePercentageLeadingSize(
+          context: context,
+          textStyle: textStyle,
+          maxToastWidth: maxToastWidth,
+          heightPercentage: heightPercentage,
+          widthPercentage: widthPercentage,
+        );
         final asset = ToastPackConfig.defaultIconAsset;
         if (asset != null) {
-          return _assetWithFallback(asset, variant, textColor);
+          return _assetWithFallback(asset, variant, textColor, resolvedSize);
         }
         return _nativeAppIconWithFallback(
           appIconFuture: _appIconFuture ??= AppIconProvider.load(),
           variant: variant,
           textColor: textColor,
+          size: resolvedSize,
         );
     }
+  }
+
+  double _resolvePercentageLeadingSize({
+    required BuildContext context,
+    required TextStyle textStyle,
+    required double maxToastWidth,
+    required double heightPercentage,
+    required double widthPercentage,
+  }) {
+    final horizontalPadding = widget.cfg.padding.horizontal;
+    final verticalPadding = widget.cfg.padding.vertical;
+    final availableWidth = maxToastWidth.isFinite
+        ? maxToastWidth
+        : double.infinity;
+    final textDirection = Directionality.maybeOf(context) ?? TextDirection.ltr;
+    final closeWidth = kIsWeb && widget.cfg.webShowClose
+        ? _closeIconSize + _leadingGap
+        : 0.0;
+    final maxLeadingWidth = math.max(
+      0.0,
+      availableWidth - horizontalPadding - _leadingGap - closeWidth,
+    );
+    final widthCap = maxLeadingWidth * widthPercentage;
+
+    var resolvedSize = 0.0;
+    for (var index = 0; index < 6; index++) {
+      final nextSize = _measurePercentageLeadingSize(
+        reservedLeadingWidth: resolvedSize,
+        availableWidth: availableWidth,
+        horizontalPadding: horizontalPadding,
+        verticalPadding: verticalPadding,
+        closeWidth: closeWidth,
+        widthCap: widthCap,
+        heightPercentage: heightPercentage,
+        textStyle: textStyle,
+        textDirection: textDirection,
+      );
+      if ((nextSize - resolvedSize).abs() < 0.5) return nextSize;
+      if (index == 5) return resolvedSize;
+      resolvedSize = nextSize;
+    }
+
+    return resolvedSize;
+  }
+
+  double _measurePercentageLeadingSize({
+    required double reservedLeadingWidth,
+    required double availableWidth,
+    required double horizontalPadding,
+    required double verticalPadding,
+    required double closeWidth,
+    required double widthCap,
+    required double heightPercentage,
+    required TextStyle textStyle,
+    required TextDirection textDirection,
+  }) {
+    final textMaxWidth = math.max(
+      0.0,
+      availableWidth -
+          horizontalPadding -
+          reservedLeadingWidth -
+          _leadingGap -
+          closeWidth,
+    );
+    final textPainter = TextPainter(
+      text: TextSpan(text: widget.cfg.message, style: textStyle),
+      textDirection: textDirection,
+      maxLines: null,
+    )..layout(maxWidth: textMaxWidth);
+    final baseToastHeight =
+        verticalPadding +
+        math.max(
+          textPainter.height,
+          kIsWeb && widget.cfg.webShowClose ? _closeIconSize : 0,
+        );
+
+    return math.min(baseToastHeight * heightPercentage, widthCap);
   }
 
   Widget _nativeAppIconWithFallback({
     required Future<Uint8List?> appIconFuture,
     required ToastVariantDefaults variant,
     required Color textColor,
+    required double size,
   }) {
     return FutureBuilder<Uint8List?>(
       future: appIconFuture,
       builder: (context, snapshot) {
         final bytes = snapshot.data;
         if (bytes == null || bytes.isEmpty) {
-          return Icon(variant.fallbackIcon, color: textColor, size: 24);
+          return Icon(variant.fallbackIcon, color: textColor, size: size);
         }
         return Image.memory(
           bytes,
-          width: 24,
-          height: 24,
+          width: size,
+          height: size,
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) =>
-              Icon(variant.fallbackIcon, color: textColor, size: 24),
+              Icon(variant.fallbackIcon, color: textColor, size: size),
         );
       },
     );
@@ -302,13 +429,17 @@ class ToastWidgetState extends State<ToastWidget>
     String path,
     ToastVariantDefaults variant,
     Color textColor,
-  ) {
+    double size, {
+    Color? color,
+  }) {
     return Image.asset(
       path,
-      width: 24,
-      height: 24,
+      width: size,
+      height: size,
+      color: color,
+      colorBlendMode: color == null ? null : BlendMode.srcIn,
       errorBuilder: (context, error, stackTrace) =>
-          Icon(variant.fallbackIcon, color: textColor, size: 24),
+          Icon(variant.fallbackIcon, color: textColor, size: size),
     );
   }
 }

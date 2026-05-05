@@ -284,6 +284,22 @@ ToastPack.success(
 );
 ```
 
+Image leading visuals use percentage-based sizing. By default, the image can
+occupy `80%` of the toast height and `20%` of the toast width. In code,
+`0.80` means 80%, not 80 pixels.
+
+```dart
+ToastPack.success(
+  context,
+  'Reward unlocked',
+  leading: const ToastLeading.image(
+    'assets/reward.png',
+    heightPercentage: 0.75,
+    widthPercentage: 0.18,
+  ),
+);
+```
+
 If the asset cannot load, the toast falls back to the variant icon.
 
 ### App icon
@@ -295,6 +311,20 @@ ToastPack.info(
   context,
   'Snaptoast is ready',
   leading: const ToastLeading.appIcon(),
+);
+```
+
+The app icon uses the same percentage sizing defaults as image leading visuals:
+`heightPercentage: 0.80` and `widthPercentage: 0.20`.
+
+```dart
+ToastPack.info(
+  context,
+  'Snaptoast is ready',
+  leading: const ToastLeading.appIcon(
+    heightPercentage: 0.80,
+    widthPercentage: 0.20,
+  ),
 );
 ```
 
@@ -590,6 +620,7 @@ ToastPack.success(
   fontFamily: null,
   leading: const ToastLeading.none(),
   margin: const EdgeInsets.all(16),
+  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
   animation: ToastAnimation.slide,
   animationDuration: const Duration(milliseconds: 250),
   curve: Curves.easeOut,
@@ -609,6 +640,7 @@ ToastPack.success(
 | `fontFamily` | `String?` | ambient text font |
 | `leading` | `ToastLeading` | `ToastLeading.none()` |
 | `margin` | `EdgeInsets` | `EdgeInsets.all(16)` |
+| `padding` | `EdgeInsets` | `EdgeInsets.symmetric(horizontal: 20, vertical: 14)` |
 | `animation` | `ToastAnimation` | `ToastAnimation.slide` |
 | `animationDuration` | `Duration` | `Duration(milliseconds: 250)` |
 | `curve` | `Curve` | `Curves.easeOut` |

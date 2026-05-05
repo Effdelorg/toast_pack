@@ -1,3 +1,17 @@
+## Unreleased
+
+- Add optional `overlayState` support to `ToastPack.success`, `.error`,
+  `.warning`, and `.info`, and allow `context` to be nullable when an explicit
+  overlay is provided.
+- Add per-toast `padding`, defaulting to
+  `EdgeInsets.symmetric(horizontal: 20, vertical: 14)`.
+- Add percentage sizing controls to `ToastLeading.image` and
+  `ToastLeading.appIcon` with `heightPercentage` and `widthPercentage`.
+- Fix percentage-based leading sizing so wrapped text measurement reserves the
+  resolved leading width and gap before calculating toast height.
+- Add readable percentage fields to `ToastLeadingImage` and
+  `ToastLeadingAppIcon`.
+
 ## 0.1.1
 
 - Rename the published package to `toast_pack`.

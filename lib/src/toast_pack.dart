@@ -11,6 +11,11 @@ import 'toast_widget.dart';
 class ToastPack {
   ToastPack._();
 
+  static const defaultPadding = EdgeInsets.symmetric(
+    horizontal: 20,
+    vertical: 14,
+  );
+
   /// Optional global configuration. Call once (e.g. in `main()`).
   ///
   /// * [defaultIconAsset] — optional asset override used by
@@ -27,8 +32,9 @@ class ToastPack {
   }
 
   static void success(
-    BuildContext context,
+    BuildContext? context,
     String message, {
+    OverlayState? overlayState,
     Duration duration = const Duration(seconds: 2),
     ToastGravity gravity = ToastGravity.bottom,
     Color? backgroundColor,
@@ -37,6 +43,7 @@ class ToastPack {
     String? fontFamily,
     ToastLeading leading = const ToastLeading.none(),
     EdgeInsets margin = const EdgeInsets.all(16),
+    EdgeInsets padding = defaultPadding,
     ToastAnimation animation = ToastAnimation.slide,
     Duration animationDuration = const Duration(milliseconds: 250),
     Curve curve = Curves.easeOut,
@@ -46,6 +53,7 @@ class ToastPack {
   }) {
     _show(
       context,
+      overlayState,
       ToastVariant.success,
       message,
       duration: duration,
@@ -56,6 +64,7 @@ class ToastPack {
       fontFamily: fontFamily,
       leading: leading,
       margin: margin,
+      padding: padding,
       animation: animation,
       animationDuration: animationDuration,
       curve: curve,
@@ -66,8 +75,9 @@ class ToastPack {
   }
 
   static void error(
-    BuildContext context,
+    BuildContext? context,
     String message, {
+    OverlayState? overlayState,
     Duration duration = const Duration(seconds: 2),
     ToastGravity gravity = ToastGravity.bottom,
     Color? backgroundColor,
@@ -76,6 +86,7 @@ class ToastPack {
     String? fontFamily,
     ToastLeading leading = const ToastLeading.none(),
     EdgeInsets margin = const EdgeInsets.all(16),
+    EdgeInsets padding = defaultPadding,
     ToastAnimation animation = ToastAnimation.slide,
     Duration animationDuration = const Duration(milliseconds: 250),
     Curve curve = Curves.easeOut,
@@ -85,6 +96,7 @@ class ToastPack {
   }) {
     _show(
       context,
+      overlayState,
       ToastVariant.error,
       message,
       duration: duration,
@@ -95,6 +107,7 @@ class ToastPack {
       fontFamily: fontFamily,
       leading: leading,
       margin: margin,
+      padding: padding,
       animation: animation,
       animationDuration: animationDuration,
       curve: curve,
@@ -105,8 +118,9 @@ class ToastPack {
   }
 
   static void warning(
-    BuildContext context,
+    BuildContext? context,
     String message, {
+    OverlayState? overlayState,
     Duration duration = const Duration(seconds: 2),
     ToastGravity gravity = ToastGravity.bottom,
     Color? backgroundColor,
@@ -115,6 +129,7 @@ class ToastPack {
     String? fontFamily,
     ToastLeading leading = const ToastLeading.none(),
     EdgeInsets margin = const EdgeInsets.all(16),
+    EdgeInsets padding = defaultPadding,
     ToastAnimation animation = ToastAnimation.slide,
     Duration animationDuration = const Duration(milliseconds: 250),
     Curve curve = Curves.easeOut,
@@ -124,6 +139,7 @@ class ToastPack {
   }) {
     _show(
       context,
+      overlayState,
       ToastVariant.warning,
       message,
       duration: duration,
@@ -134,6 +150,7 @@ class ToastPack {
       fontFamily: fontFamily,
       leading: leading,
       margin: margin,
+      padding: padding,
       animation: animation,
       animationDuration: animationDuration,
       curve: curve,
@@ -144,8 +161,9 @@ class ToastPack {
   }
 
   static void info(
-    BuildContext context,
+    BuildContext? context,
     String message, {
+    OverlayState? overlayState,
     Duration duration = const Duration(seconds: 2),
     ToastGravity gravity = ToastGravity.bottom,
     Color? backgroundColor,
@@ -154,6 +172,7 @@ class ToastPack {
     String? fontFamily,
     ToastLeading leading = const ToastLeading.none(),
     EdgeInsets margin = const EdgeInsets.all(16),
+    EdgeInsets padding = defaultPadding,
     ToastAnimation animation = ToastAnimation.slide,
     Duration animationDuration = const Duration(milliseconds: 250),
     Curve curve = Curves.easeOut,
@@ -163,6 +182,7 @@ class ToastPack {
   }) {
     _show(
       context,
+      overlayState,
       ToastVariant.info,
       message,
       duration: duration,
@@ -173,6 +193,7 @@ class ToastPack {
       fontFamily: fontFamily,
       leading: leading,
       margin: margin,
+      padding: padding,
       animation: animation,
       animationDuration: animationDuration,
       curve: curve,
@@ -186,7 +207,8 @@ class ToastPack {
   static void dismiss() => ToastManager.instance.dismiss();
 
   static void _show(
-    BuildContext context,
+    BuildContext? context,
+    OverlayState? overlayState,
     ToastVariant variant,
     String message, {
     required Duration duration,
@@ -197,6 +219,7 @@ class ToastPack {
     required String? fontFamily,
     required ToastLeading leading,
     required EdgeInsets margin,
+    required EdgeInsets padding,
     required ToastAnimation animation,
     required Duration animationDuration,
     required Curve curve,
@@ -223,6 +246,7 @@ class ToastPack {
         fontFamily: fontFamily,
         leading: leading,
         margin: margin,
+        padding: padding,
         animation: animation,
         animationDuration: animationDuration,
         curve: curve,
@@ -230,6 +254,7 @@ class ToastPack {
         webBgColor: resolvedWebBg,
         webPosition: webPosition,
       ),
+      overlayState: overlayState,
     );
   }
 }
