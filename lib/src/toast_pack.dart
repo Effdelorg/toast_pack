@@ -12,8 +12,8 @@ class ToastPack {
   ToastPack._();
 
   static const defaultPadding = EdgeInsets.symmetric(
-    horizontal: 20,
-    vertical: 14,
+    horizontal: 10,
+    vertical: 10,
   );
 
   /// Optional global configuration. Call once (e.g. in `main()`).
@@ -229,8 +229,7 @@ class ToastPack {
   }) {
     // Resolve the web background: on web, default to the PRD gradient when
     // not provided. On non-web, this field is ignored by the widget.
-    const defaultWebGradient =
-        'linear-gradient(to right, #00b09b, #96c93d)';
+    const defaultWebGradient = 'linear-gradient(to right, #00b09b, #96c93d)';
     final resolvedWebBg = webBgColor ?? defaultWebGradient;
 
     ToastManager.instance.show(
