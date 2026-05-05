@@ -7,7 +7,7 @@ let package = Package(
         .macOS("10.15")
     ],
     products: [
-        .library(name: "toast_pack", targets: ["toast_pack"])
+        .library(name: "toast-pack", targets: ["toast_pack"])
     ],
     dependencies: [
         .package(name: "FlutterFramework", path: "../FlutterFramework")

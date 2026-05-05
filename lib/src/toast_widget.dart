@@ -229,11 +229,19 @@ class ToastWidgetState extends State<ToastWidget>
       );
     }
 
+    // On web with a CSS webBgColor the rendered background may be a gradient or
+    // a color that doesn't parse back to a Flutter Color. Fall back to bgColor
+    // so the icon matte is at worst slightly off rather than white.
+    final iconFill = (kIsWeb && cfg.webBgColor != null)
+        ? _parseSolidWebColor(cfg.webBgColor!) ?? bgColor
+        : bgColor;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final leadingWidget = _buildLeading(
           context,
           variant,
+          iconFill,
           textColor,
           textStyle,
           constraints.maxWidth,
@@ -272,6 +280,7 @@ class ToastWidgetState extends State<ToastWidget>
   Widget? _buildLeading(
     BuildContext context,
     ToastVariantDefaults variant,
+    Color bgColor,
     Color textColor,
     TextStyle textStyle,
     double maxToastWidth,
@@ -317,6 +326,7 @@ class ToastWidgetState extends State<ToastWidget>
         return _nativeAppIconWithFallback(
           appIconFuture: _appIconFuture ??= AppIconProvider.load(),
           variant: variant,
+          bgColor: bgColor,
           textColor: textColor,
           size: resolvedSize,
         );
@@ -403,6 +413,7 @@ class ToastWidgetState extends State<ToastWidget>
   Widget _nativeAppIconWithFallback({
     required Future<Uint8List?> appIconFuture,
     required ToastVariantDefaults variant,
+    required Color bgColor,
     required Color textColor,
     required double size,
   }) {
@@ -413,16 +424,47 @@ class ToastWidgetState extends State<ToastWidget>
         if (bytes == null || bytes.isEmpty) {
           return Icon(variant.fallbackIcon, color: textColor, size: size);
         }
-        return Image.memory(
-          bytes,
+        // iOS app icons have a rounded-square shape with transparent corners.
+        // Fill the clipped circle with the resolved toast background color so
+        // those corners blend seamlessly instead of showing through.
+        final inset = defaultTargetPlatform == TargetPlatform.iOS
+            ? size * 0.08
+            : 0.0;
+        return SizedBox(
           width: size,
           height: size,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) =>
-              Icon(variant.fallbackIcon, color: textColor, size: size),
+          child: ClipOval(
+            child: ColoredBox(
+              color: bgColor,
+              child: Padding(
+                padding: EdgeInsets.all(inset),
+                child: Image.memory(
+                  bytes,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                      Icon(variant.fallbackIcon, color: textColor, size: size),
+                ),
+              ),
+            ),
+          ),
         );
       },
     );
+  }
+
+  /// Returns a solid [Color] for hex strings (`#RGB6` or `#RGB6AA`).
+  /// Returns null for gradients or strings that cannot be parsed.
+  static Color? _parseSolidWebColor(String raw) {
+    final s = raw.trim();
+    if (!s.startsWith('#')) return null;
+    try {
+      var h = s.substring(1);
+      if (h.length == 6) h = 'FF$h';
+      if (h.length != 8) return null;
+      return Color(int.parse(h, radix: 16));
+    } catch (_) {
+      return null;
+    }
   }
 
   Widget _assetWithFallback(
