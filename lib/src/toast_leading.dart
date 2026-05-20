@@ -11,7 +11,12 @@ sealed class ToastLeading {
   const factory ToastLeading.none() = ToastLeadingNone;
 
   /// Render an asset image at [assetPath].
-  const factory ToastLeading.image(String assetPath) = ToastLeadingImage;
+  const factory ToastLeading.image(
+    String assetPath, {
+    Color? color,
+    double heightPercentage,
+    double widthPercentage,
+  }) = ToastLeadingImage;
 
   /// Render an [IconData] with optional [color] and [size].
   const factory ToastLeading.icon(
@@ -22,10 +27,13 @@ sealed class ToastLeading {
 
   /// Render the native launcher/app icon by default.
   ///
-  /// If `SnapToast.init(defaultIconAsset: ...)` is set, that asset is used as
+  /// If `ToastPack.init(defaultIconAsset: ...)` is set, that asset is used as
   /// an override. Falls back to the variant icon when no app icon can be
   /// resolved.
-  const factory ToastLeading.appIcon() = ToastLeadingAppIcon;
+  const factory ToastLeading.appIcon({
+    double heightPercentage,
+    double widthPercentage,
+  }) = ToastLeadingAppIcon;
 }
 
 class ToastLeadingNone extends ToastLeading {
@@ -34,7 +42,23 @@ class ToastLeadingNone extends ToastLeading {
 
 class ToastLeadingImage extends ToastLeading {
   final String assetPath;
-  const ToastLeadingImage(this.assetPath);
+  final Color? color;
+  final double heightPercentage;
+  final double widthPercentage;
+
+  const ToastLeadingImage(
+    this.assetPath, {
+    this.color,
+    this.heightPercentage = 0.80,
+    this.widthPercentage = 0.20,
+  }) : assert(
+          heightPercentage > 0 && heightPercentage <= 1,
+          'heightPercentage must be greater than 0 and less than or equal to 1.',
+        ),
+        assert(
+          widthPercentage > 0 && widthPercentage <= 1,
+          'widthPercentage must be greater than 0 and less than or equal to 1.',
+        );
 }
 
 class ToastLeadingIcon extends ToastLeading {
@@ -45,5 +69,18 @@ class ToastLeadingIcon extends ToastLeading {
 }
 
 class ToastLeadingAppIcon extends ToastLeading {
-  const ToastLeadingAppIcon();
+  final double heightPercentage;
+  final double widthPercentage;
+
+  const ToastLeadingAppIcon({
+    this.heightPercentage = 0.80,
+    this.widthPercentage = 0.20,
+  }) : assert(
+          heightPercentage > 0 && heightPercentage <= 1,
+          'heightPercentage must be greater than 0 and less than or equal to 1.',
+        ),
+        assert(
+          widthPercentage > 0 && widthPercentage <= 1,
+          'widthPercentage must be greater than 0 and less than or equal to 1.',
+        );
 }

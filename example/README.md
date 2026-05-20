@@ -1,3 +1,3 @@
-# snap_toast_flutter_example
+# toast_pack_example
 
 A new Flutter project.

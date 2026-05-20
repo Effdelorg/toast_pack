@@ -1,11 +1,21 @@
-name: snap_toast_flutter
+name: toast_pack
 description: "A lightweight, zero-dependency Flutter package for displaying toast notifications using Overlay."
 version: 0.1.1
-homepage:
+homepage: https://github.com/Effdelorg/toast_pack
+repository: https://github.com/Effdelorg/toast_pack
+issue_tracker: https://github.com/Effdelorg/toast_pack/issues
+
+platforms:
+  android:
+  ios:
+  linux:
+  macos:
+  web:
+  windows:
 
 environment:
   sdk: ^3.11.0
-  flutter: ">=1.17.0"
+  flutter: ">=3.41.0"
 
 dependencies:
   flutter:
@@ -24,12 +34,12 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.effdel.snap_toast_flutter
-        pluginClass: SnapToastFlutterPlugin
+        package: com.effdel.toast_pack
+        pluginClass: ToastPackPlugin
       ios:
-        pluginClass: SnapToastFlutterPlugin
+        pluginClass: ToastPackPlugin
       macos:
-        pluginClass: SnapToastFlutterPlugin
+        pluginClass: ToastPackPlugin
 
   # To add assets to your package, add an assets section, like this:
   # assets:

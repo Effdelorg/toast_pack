@@ -1,16 +1,16 @@
-name: snap_toast_flutter_example
-description: Demo app for the snap_toast_flutter package.
+name: toast_pack_example
+description: Demo app for the toast_pack package.
 publish_to: "none"
 version: 0.1.0
 
 environment:
   sdk: ^3.11.0
-  flutter: ">=1.17.0"
+  flutter: ">=3.41.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  snap_toast_flutter:
+  toast_pack:
     path: ../
 
 dev_dependencies:

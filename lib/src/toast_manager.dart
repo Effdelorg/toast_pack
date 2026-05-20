@@ -12,8 +12,13 @@ class ToastManager {
   OverlayEntry? _current;
   GlobalKey<ToastWidgetState>? _currentKey;
 
-  void show(BuildContext context, ResolvedToastConfig cfg) {
-    final overlay = Overlay.maybeOf(context, rootOverlay: true);
+  void show(
+    BuildContext? context,
+    ResolvedToastConfig cfg, {
+    OverlayState? overlayState,
+  }) {
+    final overlay = overlayState ??
+        (context == null ? null : Overlay.maybeOf(context, rootOverlay: true));
     if (overlay == null) {
       // PRD §14: "Invalid context → safely handled".
       return;
@@ -36,7 +41,7 @@ class ToastManager {
     _currentKey = key;
 
     if (previous != null) {
-      switch (SnapToastConfig.replacementMode) {
+      switch (ToastPackConfig.replacementMode) {
         case ReplacementMode.instantReplace:
           _safeRemove(previous);
           overlay.insert(entry);

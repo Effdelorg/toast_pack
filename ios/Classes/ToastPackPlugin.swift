@@ -1,12 +1,12 @@
 import Flutter
 import UIKit
 
-public class SnapToastFlutterPlugin: NSObject, FlutterPlugin {
-  private static let channelName = "snap_toast_flutter/app_icon"
+public class ToastPackPlugin: NSObject, FlutterPlugin {
+  private static let channelName = "toast_pack/app_icon"
 
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: channelName, binaryMessenger: registrar.messenger())
-    let instance = SnapToastFlutterPlugin()
+    let instance = ToastPackPlugin()
     registrar.addMethodCallDelegate(instance, channel: channel)
   }
 

@@ -8,8 +8,13 @@ import 'toast_variant.dart';
 import 'toast_widget.dart';
 
 /// Public entry point for showing toasts.
-class SnapToast {
-  SnapToast._();
+class ToastPack {
+  ToastPack._();
+
+  static const defaultPadding = EdgeInsets.symmetric(
+    horizontal: 10,
+    vertical: 10,
+  );
 
   /// Optional global configuration. Call once (e.g. in `main()`).
   ///
@@ -22,13 +27,14 @@ class SnapToast {
     String? defaultIconAsset,
     ReplacementMode replacementMode = ReplacementMode.instantReplace,
   }) {
-    SnapToastConfig.defaultIconAsset = defaultIconAsset;
-    SnapToastConfig.replacementMode = replacementMode;
+    ToastPackConfig.defaultIconAsset = defaultIconAsset;
+    ToastPackConfig.replacementMode = replacementMode;
   }
 
   static void success(
-    BuildContext context,
+    BuildContext? context,
     String message, {
+    OverlayState? overlayState,
     Duration duration = const Duration(seconds: 2),
     ToastGravity gravity = ToastGravity.bottom,
     Color? backgroundColor,
@@ -37,6 +43,7 @@ class SnapToast {
     String? fontFamily,
     ToastLeading leading = const ToastLeading.none(),
     EdgeInsets margin = const EdgeInsets.all(16),
+    EdgeInsets padding = defaultPadding,
     ToastAnimation animation = ToastAnimation.slide,
     Duration animationDuration = const Duration(milliseconds: 250),
     Curve curve = Curves.easeOut,
@@ -46,6 +53,7 @@ class SnapToast {
   }) {
     _show(
       context,
+      overlayState,
       ToastVariant.success,
       message,
       duration: duration,
@@ -56,6 +64,7 @@ class SnapToast {
       fontFamily: fontFamily,
       leading: leading,
       margin: margin,
+      padding: padding,
       animation: animation,
       animationDuration: animationDuration,
       curve: curve,
@@ -66,8 +75,9 @@ class SnapToast {
   }
 
   static void error(
-    BuildContext context,
+    BuildContext? context,
     String message, {
+    OverlayState? overlayState,
     Duration duration = const Duration(seconds: 2),
     ToastGravity gravity = ToastGravity.bottom,
     Color? backgroundColor,
@@ -76,6 +86,7 @@ class SnapToast {
     String? fontFamily,
     ToastLeading leading = const ToastLeading.none(),
     EdgeInsets margin = const EdgeInsets.all(16),
+    EdgeInsets padding = defaultPadding,
     ToastAnimation animation = ToastAnimation.slide,
     Duration animationDuration = const Duration(milliseconds: 250),
     Curve curve = Curves.easeOut,
@@ -85,6 +96,7 @@ class SnapToast {
   }) {
     _show(
       context,
+      overlayState,
       ToastVariant.error,
       message,
       duration: duration,
@@ -95,6 +107,7 @@ class SnapToast {
       fontFamily: fontFamily,
       leading: leading,
       margin: margin,
+      padding: padding,
       animation: animation,
       animationDuration: animationDuration,
       curve: curve,
@@ -105,8 +118,9 @@ class SnapToast {
   }
 
   static void warning(
-    BuildContext context,
+    BuildContext? context,
     String message, {
+    OverlayState? overlayState,
     Duration duration = const Duration(seconds: 2),
     ToastGravity gravity = ToastGravity.bottom,
     Color? backgroundColor,
@@ -115,6 +129,7 @@ class SnapToast {
     String? fontFamily,
     ToastLeading leading = const ToastLeading.none(),
     EdgeInsets margin = const EdgeInsets.all(16),
+    EdgeInsets padding = defaultPadding,
     ToastAnimation animation = ToastAnimation.slide,
     Duration animationDuration = const Duration(milliseconds: 250),
     Curve curve = Curves.easeOut,
@@ -124,6 +139,7 @@ class SnapToast {
   }) {
     _show(
       context,
+      overlayState,
       ToastVariant.warning,
       message,
       duration: duration,
@@ -134,6 +150,7 @@ class SnapToast {
       fontFamily: fontFamily,
       leading: leading,
       margin: margin,
+      padding: padding,
       animation: animation,
       animationDuration: animationDuration,
       curve: curve,
@@ -144,8 +161,9 @@ class SnapToast {
   }
 
   static void info(
-    BuildContext context,
+    BuildContext? context,
     String message, {
+    OverlayState? overlayState,
     Duration duration = const Duration(seconds: 2),
     ToastGravity gravity = ToastGravity.bottom,
     Color? backgroundColor,
@@ -154,6 +172,7 @@ class SnapToast {
     String? fontFamily,
     ToastLeading leading = const ToastLeading.none(),
     EdgeInsets margin = const EdgeInsets.all(16),
+    EdgeInsets padding = defaultPadding,
     ToastAnimation animation = ToastAnimation.slide,
     Duration animationDuration = const Duration(milliseconds: 250),
     Curve curve = Curves.easeOut,
@@ -163,6 +182,7 @@ class SnapToast {
   }) {
     _show(
       context,
+      overlayState,
       ToastVariant.info,
       message,
       duration: duration,
@@ -173,6 +193,7 @@ class SnapToast {
       fontFamily: fontFamily,
       leading: leading,
       margin: margin,
+      padding: padding,
       animation: animation,
       animationDuration: animationDuration,
       curve: curve,
@@ -186,7 +207,8 @@ class SnapToast {
   static void dismiss() => ToastManager.instance.dismiss();
 
   static void _show(
-    BuildContext context,
+    BuildContext? context,
+    OverlayState? overlayState,
     ToastVariant variant,
     String message, {
     required Duration duration,
@@ -197,6 +219,7 @@ class SnapToast {
     required String? fontFamily,
     required ToastLeading leading,
     required EdgeInsets margin,
+    required EdgeInsets padding,
     required ToastAnimation animation,
     required Duration animationDuration,
     required Curve curve,
@@ -206,8 +229,7 @@ class SnapToast {
   }) {
     // Resolve the web background: on web, default to the PRD gradient when
     // not provided. On non-web, this field is ignored by the widget.
-    const defaultWebGradient =
-        'linear-gradient(to right, #00b09b, #96c93d)';
+    const defaultWebGradient = 'linear-gradient(to right, #00b09b, #96c93d)';
     final resolvedWebBg = webBgColor ?? defaultWebGradient;
 
     ToastManager.instance.show(
@@ -223,6 +245,7 @@ class SnapToast {
         fontFamily: fontFamily,
         leading: leading,
         margin: margin,
+        padding: padding,
         animation: animation,
         animationDuration: animationDuration,
         curve: curve,
@@ -230,6 +253,7 @@ class SnapToast {
         webBgColor: resolvedWebBg,
         webPosition: webPosition,
       ),
+      overlayState: overlayState,
     );
   }
 }

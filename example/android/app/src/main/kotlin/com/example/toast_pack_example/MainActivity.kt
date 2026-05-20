@@ -1,4 +1,4 @@
-package com.example.snap_toast_flutter_example
+package com.example.toast_pack_example
 
 import io.flutter.embedding.android.FlutterActivity
 

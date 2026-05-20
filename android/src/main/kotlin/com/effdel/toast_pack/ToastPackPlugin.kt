@@ -1,4 +1,4 @@
-package com.effdel.snap_toast_flutter
+package com.effdel.toast_pack
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -11,7 +11,7 @@ import io.flutter.plugin.common.MethodChannel
 import java.io.ByteArrayOutputStream
 
 /** Provides native app icon bytes for ToastLeading.appIcon(). */
-class SnapToastFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
+class ToastPackPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
   private lateinit var channel: MethodChannel
   private lateinit var context: Context
 
@@ -59,7 +59,7 @@ class SnapToastFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
   }
 
   private companion object {
-    const val CHANNEL_NAME = "snap_toast_flutter/app_icon"
+    const val CHANNEL_NAME = "toast_pack/app_icon"
     const val GET_APP_ICON = "getAppIcon"
   }
 }
