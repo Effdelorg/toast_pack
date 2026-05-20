@@ -34,6 +34,12 @@ void _mockNativeAppIcon() {
   addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
 }
 
+/// Layout size of the clipped app-icon image (not [Image.width], which is null).
+Size _appIconLayoutSize(WidgetTester tester) {
+  expect(find.byType(Image), findsOneWidget);
+  return tester.getSize(find.byType(Image));
+}
+
 void main() {
   setUp(ToastPackConfig.reset);
 
@@ -136,9 +142,9 @@ void main() {
       await tester.pump();
 
       expect(find.text('Native icon'), findsOneWidget);
-      final image = tester.widget<Image>(find.byType(Image));
-      expect(image.width, image.height);
-      expect(image.width, greaterThan(0));
+      final size = _appIconLayoutSize(tester);
+      expect(size.width, size.height);
+      expect(size.width, greaterThan(0));
       expect(find.byIcon(Icons.info), findsNothing);
       ToastPack.dismiss();
       await tester.pumpAndSettle();
@@ -159,8 +165,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pump();
 
-      final image = tester.widget<Image>(find.byType(Image));
-      expect(image.width, lessThan(24));
+      expect(_appIconLayoutSize(tester).width, lessThan(24));
       ToastPack.dismiss();
       await tester.pumpAndSettle();
     });
@@ -180,7 +185,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pump();
-      final shortSize = tester.widget<Image>(find.byType(Image)).width;
+      final shortSize = _appIconLayoutSize(tester).width;
 
       ToastPack.dismiss();
       await tester.pumpAndSettle();
@@ -193,9 +198,10 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pump();
-      final longSize = tester.widget<Image>(find.byType(Image)).width;
+      final longSize = _appIconLayoutSize(tester).width;
 
       expect(longSize, shortSize);
+      expect(shortSize, greaterThan(0));
       ToastPack.dismiss();
       await tester.pumpAndSettle();
     });
@@ -219,8 +225,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pump();
 
-      final image = tester.widget<Image>(find.byType(Image));
-      expect(image.width, lessThan(30));
+      expect(_appIconLayoutSize(tester).width, lessThan(30));
       ToastPack.dismiss();
       await tester.pumpAndSettle();
     });
@@ -247,10 +252,10 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pump();
 
-      final image = tester.widget<Image>(find.byType(Image));
+      final iconWidth = _appIconLayoutSize(tester).width;
       const availableWidth = 220.0 - 32.0;
-      const horizontalPadding = 40.0;
-      const verticalPadding = 28.0;
+      final horizontalPadding = ToastPack.defaultPadding.horizontal;
+      final verticalPadding = ToastPack.defaultPadding.vertical;
       const leadingGap = 12.0;
       final oldTextPainter = TextPainter(
         text: const TextSpan(
@@ -268,7 +273,7 @@ void main() {
         maxLeadingWidth * 0.80,
       );
 
-      expect(image.width, greaterThan(oldMeasuredSize + 3));
+      expect(iconWidth, greaterThan(oldMeasuredSize + 3));
       ToastPack.dismiss();
       await tester.pumpAndSettle();
     });
@@ -293,8 +298,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pump();
 
-      final image = tester.widget<Image>(find.byType(Image));
-      expect(image.width, lessThan(220));
+      expect(_appIconLayoutSize(tester).width, lessThan(220));
       expect(tester.takeException(), isNull);
       ToastPack.dismiss();
       await tester.pumpAndSettle();
