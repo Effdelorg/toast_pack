@@ -10,5 +10,6 @@ export 'src/toast_leading.dart'
         ToastLeadingNone,
         ToastLeadingImage,
         ToastLeadingIcon,
-        ToastLeadingAppIcon;
+        ToastLeadingAppIcon,
+        ToastIconClip;
 export 'src/toast_variant.dart' show ToastVariant;

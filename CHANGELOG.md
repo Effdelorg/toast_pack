@@ -1,3 +1,16 @@
+## 0.1.2
+
+- Added `ToastIconClip` for `ToastLeading.appIcon`.
+- `ToastLeading.appIcon()` now uses a circular leading shape by default.
+- Added `ToastIconClip.none` for showing the resolved app icon without circular
+  clipping.
+- Improved iOS app icon rendering so the icon is padded inside the circular
+  leading badge instead of cropping edge artwork.
+- Preserved the previous `defaultIconAsset` behavior: asset overrides remain
+  unclipped unless `clip: ToastIconClip.circle` is explicitly passed.
+- Added test coverage for default app-icon clipping, iOS badge rendering, and
+  unclipped native and asset app icons.
+
 ## 0.1.1
 
 Initial release.

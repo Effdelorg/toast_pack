@@ -229,19 +229,11 @@ class ToastWidgetState extends State<ToastWidget>
       );
     }
 
-    // On web with a CSS webBgColor the rendered background may be a gradient or
-    // a color that doesn't parse back to a Flutter Color. Fall back to bgColor
-    // so the icon matte is at worst slightly off rather than white.
-    final iconFill = (kIsWeb && cfg.webBgColor != null)
-        ? _parseSolidWebColor(cfg.webBgColor!) ?? bgColor
-        : bgColor;
-
     return LayoutBuilder(
       builder: (context, constraints) {
         final leadingWidget = _buildLeading(
           context,
           variant,
-          iconFill,
           textColor,
           textStyle,
           constraints.maxWidth,
@@ -280,7 +272,6 @@ class ToastWidgetState extends State<ToastWidget>
   Widget? _buildLeading(
     BuildContext context,
     ToastVariantDefaults variant,
-    Color bgColor,
     Color textColor,
     TextStyle textStyle,
     double maxToastWidth,
@@ -311,7 +302,11 @@ class ToastWidgetState extends State<ToastWidget>
         );
       case ToastLeadingIcon(:final icon, :final color, :final size):
         return Icon(icon, color: color ?? textColor, size: size ?? 24);
-      case ToastLeadingAppIcon(:final heightPercentage, :final widthPercentage):
+      case ToastLeadingAppIcon(
+        :final heightPercentage,
+        :final widthPercentage,
+        :final clip,
+      ):
         final resolvedSize = _resolvePercentageLeadingSize(
           context: context,
           textStyle: textStyle,
@@ -321,14 +316,20 @@ class ToastWidgetState extends State<ToastWidget>
         );
         final asset = ToastPackConfig.defaultIconAsset;
         if (asset != null) {
-          return _assetWithFallback(asset, variant, textColor, resolvedSize);
+          return _appIconAssetWithFallback(
+            asset,
+            variant,
+            textColor,
+            resolvedSize,
+            clip ?? ToastIconClip.none,
+          );
         }
         return _nativeAppIconWithFallback(
           appIconFuture: _appIconFuture ??= AppIconProvider.load(),
           variant: variant,
-          bgColor: bgColor,
           textColor: textColor,
           size: resolvedSize,
+          clip: clip ?? ToastIconClip.circle,
         );
     }
   }
@@ -413,9 +414,9 @@ class ToastWidgetState extends State<ToastWidget>
   Widget _nativeAppIconWithFallback({
     required Future<Uint8List?> appIconFuture,
     required ToastVariantDefaults variant,
-    required Color bgColor,
     required Color textColor,
     required double size,
+    required ToastIconClip clip,
   }) {
     return FutureBuilder<Uint8List?>(
       future: appIconFuture,
@@ -424,47 +425,67 @@ class ToastWidgetState extends State<ToastWidget>
         if (bytes == null || bytes.isEmpty) {
           return Icon(variant.fallbackIcon, color: textColor, size: size);
         }
-        // iOS app icons have a rounded-square shape with transparent corners.
-        // Fill the clipped circle with the resolved toast background color so
-        // those corners blend seamlessly instead of showing through.
-        final inset = defaultTargetPlatform == TargetPlatform.iOS
-            ? size * 0.08
-            : 0.0;
-        return SizedBox(
-          width: size,
-          height: size,
-          child: ClipOval(
-            child: ColoredBox(
-              color: bgColor,
-              child: Padding(
-                padding: EdgeInsets.all(inset),
-                child: Image.memory(
-                  bytes,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      Icon(variant.fallbackIcon, color: textColor, size: size),
-                ),
-              ),
-            ),
+        final image = Image.memory(
+          bytes,
+          width: _appIconImageSize(size, clip),
+          height: _appIconImageSize(size, clip),
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => Icon(
+            variant.fallbackIcon,
+            color: textColor,
+            size: _appIconImageSize(size, clip),
           ),
         );
+        return _clipAppIcon(image, size, clip);
       },
     );
   }
 
-  /// Returns a solid [Color] for hex strings (`#RGB6` or `#RGB6AA`).
-  /// Returns null for gradients or strings that cannot be parsed.
-  static Color? _parseSolidWebColor(String raw) {
-    final s = raw.trim();
-    if (!s.startsWith('#')) return null;
-    try {
-      var h = s.substring(1);
-      if (h.length == 6) h = 'FF$h';
-      if (h.length != 8) return null;
-      return Color(int.parse(h, radix: 16));
-    } catch (_) {
-      return null;
+  Widget _appIconAssetWithFallback(
+    String path,
+    ToastVariantDefaults variant,
+    Color textColor,
+    double size,
+    ToastIconClip clip,
+  ) {
+    final image = _assetWithFallback(
+      path,
+      variant,
+      textColor,
+      _appIconImageSize(size, clip),
+    );
+    return _clipAppIcon(image, size, clip);
+  }
+
+  double _appIconImageSize(double size, ToastIconClip clip) {
+    if (clip != ToastIconClip.circle) return size;
+    return defaultTargetPlatform == TargetPlatform.iOS ? size * 0.70 : size;
+  }
+
+  Widget _clipAppIcon(Widget image, double size, ToastIconClip clip) {
+    if (clip == ToastIconClip.none) {
+      return SizedBox(width: size, height: size, child: image);
     }
+
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      return SizedBox(
+        width: size,
+        height: size,
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+          ),
+          child: Center(child: image),
+        ),
+      );
+    }
+
+    return SizedBox(
+      width: size,
+      height: size,
+      child: ClipOval(child: image),
+    );
   }
 
   Widget _assetWithFallback(

@@ -12,6 +12,7 @@ Use it when you need small success, error, warning, or info messages without add
 - Top, center, and bottom placement (SafeArea-aware)
 - Slide, fade, and scale animations
 - Optional leading icon, asset image, or app icon
+- Circular native app icon leading by default, with an unclipped option
 - Percentage-based sizing for image and app icon leading visuals
 - One toast visible at a time
 - Configurable replacement behavior
@@ -26,7 +27,7 @@ Use it when you need small success, error, warning, or info messages without add
 
 ```yaml
 dependencies:
-  toast_pack: ^0.1.1
+  toast_pack: ^0.1.2
 ```
 
 Then import it:
@@ -356,6 +357,9 @@ ToastPack.info(
 
 The app icon uses the same percentage sizing defaults as image leading visuals:
 `heightPercentage: 0.80` and `widthPercentage: 0.20`.
+By default, native app icons use a circular leading shape. If you configure
+`defaultIconAsset`, that asset keeps its original shape unless you explicitly
+pass `clip: ToastIconClip.circle`.
 
 ```dart
 ToastPack.info(
@@ -364,11 +368,27 @@ ToastPack.info(
   leading: const ToastLeading.appIcon(
     heightPercentage: 0.80,
     widthPercentage: 0.20,
+    clip: ToastIconClip.circle,
+  ),
+);
+```
+
+If you want to show the native app icon without circular clipping:
+
+```dart
+ToastPack.info(
+  context,
+  'Snaptoast is ready',
+  leading: const ToastLeading.appIcon(
+    clip: ToastIconClip.none,
   ),
 );
 ```
 
 You can also provide your own app icon asset once during startup.
+Asset overrides keep their original shape by default. Pass
+`clip: ToastIconClip.circle` when you want the asset override to use the same
+circular leading shape.
 
 ```dart
 void main() {
@@ -543,6 +563,9 @@ ToastPack.success(
 Normal toasts work inside your Flutter UI.
 
 `ToastLeading.appIcon()` can read the iOS app icon from the app bundle.
+By default, the icon is placed inside a circular badge and padded so edge
+artwork is not cropped. Use `clip: ToastIconClip.none` if you want the raw app
+icon shape.
 
 Example:
 
