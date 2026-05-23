@@ -17,7 +17,8 @@ class ToastManager {
     ResolvedToastConfig cfg, {
     OverlayState? overlayState,
   }) {
-    final overlay = overlayState ??
+    final overlay =
+        overlayState ??
         (context == null ? null : Overlay.maybeOf(context, rootOverlay: true));
     if (overlay == null) {
       // PRD §14: "Invalid context → safely handled".
@@ -30,11 +31,8 @@ class ToastManager {
     final key = GlobalKey<ToastWidgetState>();
     late final OverlayEntry entry;
     entry = OverlayEntry(
-      builder: (_) => ToastWidget(
-        key: key,
-        cfg: cfg,
-        onDismissed: () => _remove(entry),
-      ),
+      builder: (_) =>
+          ToastWidget(key: key, cfg: cfg, onDismissed: () => _remove(entry)),
     );
 
     _current = entry;

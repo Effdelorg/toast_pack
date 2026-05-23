@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+/// How `ToastLeading.appIcon()` should clip the resolved app icon image.
+enum ToastIconClip { circle, none }
+
 /// Controls the leading visual of a toast.
 ///
 /// Defaults to [ToastLeading.none]. Use [ToastLeading.icon], [ToastLeading.image],
@@ -33,6 +36,7 @@ sealed class ToastLeading {
   const factory ToastLeading.appIcon({
     double heightPercentage,
     double widthPercentage,
+    ToastIconClip? clip,
   }) = ToastLeadingAppIcon;
 }
 
@@ -71,10 +75,12 @@ class ToastLeadingIcon extends ToastLeading {
 class ToastLeadingAppIcon extends ToastLeading {
   final double heightPercentage;
   final double widthPercentage;
+  final ToastIconClip? clip;
 
   const ToastLeadingAppIcon({
     this.heightPercentage = 0.80,
     this.widthPercentage = 0.20,
+    this.clip,
   }) : assert(
           heightPercentage > 0 && heightPercentage <= 1,
           'heightPercentage must be greater than 0 and less than or equal to 1.',

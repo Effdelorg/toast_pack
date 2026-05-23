@@ -1,6 +1,6 @@
 name: toast_pack
 description: "A lightweight, zero-dependency Flutter package for displaying toast notifications using Overlay."
-version: 0.1.1
+version: 0.1.2
 homepage: https://github.com/Effdelorg/toast_pack
 repository: https://github.com/Effdelorg/toast_pack
 issue_tracker: https://github.com/Effdelorg/toast_pack/issues
